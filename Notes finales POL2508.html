@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>POL 2508 — Distribution des notes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #181c27;
+      --surface2:  #1e2335;
+      --border:    rgba(255,255,255,0.07);
+      --text:      #e8eaf0;
+      --muted:     #7b829a;
+      --accent:    #6c8ef5;
+      --gold:      #f0c060;
+
+      --a-plus:  #4ade80;
+      --a:       #34d399;
+      --a-minus: #6ee7b7;
+      --b-plus:  #60a5fa;
+      --b:       #93c5fd;
+      --c-plus:  #fbbf24;
+      --c:       #fcd34d;
+      --d-plus:  #fb923c;
+      --d:       #f97316;
+      --e:       #f87171;
+      --f:       #ef4444;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2.5rem 1rem;
+    }
+
+    .wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: relative;
+      background: linear-gradient(135deg, #1a2040 0%, #141828 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.2rem 2.5rem;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(108,142,245,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(108,142,245,0.15);
+      border: 1px solid rgba(108,142,245,0.3);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .header-badge::before { content: '●'; font-size: 0.5rem; }
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 0.4rem;
+    }
+    .header-sub {
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    .header-line {
+      margin: 1.4rem 0 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(108,142,245,0.5) 0%, transparent 80%);
+    }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .kpi:hover { border-color: rgba(108,142,245,0.3); transform: translateY(-2px); }
+    .kpi::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 14px 14px 0 0;
+    }
+    .kpi:nth-child(1)::after { background: linear-gradient(90deg, #4ade80, #34d399); }
+    .kpi:nth-child(2)::after { background: linear-gradient(90deg, #60a5fa, #818cf8); }
+    .kpi:nth-child(3)::after { background: linear-gradient(90deg, #f0c060, #fb923c); }
+    .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+
+    /* ── CHART SECTION ── */
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 2.5rem;
+    }
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 1.6rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 56px 1fr 110px;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.65rem;
+      opacity: 0;
+      transform: translateX(-12px);
+      animation: fadeIn 0.4s ease forwards;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .grade-label {
+      text-align: right;
+    }
+    .grade-letter {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      display: block;
+    }
+    .grade-range {
+      font-size: 0.65rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      height: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      width: 0;
+      transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      min-width: 4px;
+    }
+    .bar-fill.animate { width: var(--target-width); }
+    .bar-inner-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(0,0,0,0.65);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s 0.6s;
+    }
+    .bar-fill.animate .bar-inner-label { opacity: 1; }
+
+    .bar-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .bar-pct {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .bar-count {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    /* Separateur visuel entre zones */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0.4rem 0 1rem;
+      grid-column: 1 / -1;
+    }
+
+    /* ── INSIGHT FOOTER ── */
+    .insight-card {
+      background: linear-gradient(135deg, rgba(108,142,245,0.08) 0%, rgba(74,222,128,0.05) 100%);
+      border: 1px solid rgba(108,142,245,0.2);
+      border-radius: 14px;
+      padding: 1.4rem 2rem;
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+    }
+    .insight-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .insight-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.45rem;
+    }
+    .insight-body {
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .insight-body strong { color: var(--text); font-weight: 600; }
+
+    /* ── DONUT SUMMARY ── */
+    .summary-band {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .band-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .band-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .band-text {}
+    .band-label { font-size: 0.72rem; color: var(--muted); }
+    .band-val { font-size: 1.05rem; font-weight: 700; color: #fff; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding-top: 0.5rem;
+      letter-spacing: 0.03em;
+    }
+
+    @media (max-width: 600px) {
+      .kpi-grid, .summary-band { grid-template-columns: 1fr 1fr; }
+      .kpi-grid .kpi:last-child { grid-column: 1 / -1; }
+      .chart-card { padding: 1.4rem 1.2rem; }
+      .bar-row { grid-template-columns: 48px 1fr 90px; gap: 0.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">Rapport analytique POL2508·Hiver 2026</div>
+    <h1>Distribution des Notes Finales</h1>
+    <div class="header-sub">POL 2508 A00 — Pensée politique moderne (prof. Malloum)&nbsp;·&nbsp; Université d'Ottawa</div>
+    <div class="header-line"></div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Moyenne générale</div>
+      <div class="kpi-value">84,5 %</div>
+      <div class="kpi-sub">Cote : A−</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Note médiane</div>
+      <div class="kpi-value">87,0 %</div>
+      <div class="kpi-sub">Cote : A</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Étudiant·es inscrit·es</div>
+      <div class="kpi-value">219</div>
+      <div class="kpi-sub">Taux de réussite : 98,2 %</div>
+    </div>
+  </div>
+
+  <!-- SUMMARY BANDS -->
+  <div class="summary-band">
+    <div class="band-item">
+      <div class="band-dot" style="background:#4ade80"></div>
+      <div class="band-text">
+        <div class="band-label">Excellence (A+, A, A−)</div>
+        <div class="band-val">72,2 % · 158 étu.</div>
+      </div>
+    </div>
+    <div class="band-item">
+      <div class="band-dot" style="background:#60a5fa"></div>
+      <div class="band-text">
+        <div class="band-label">Mérite (B+, B)</div>
+        <div class="band-val">18,3 % · 40 étu.</div>
+      </div>
+    </div>
+    <div class="band-item">
+      <div class="band-dot" style="background:#f87171"></div>
+      <div class="band-text">
+        <div class="band-label">Insuffisance (D, E, F)</div>
+        <div class="band-val">3,2 % · 7 étu.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-card">
+    <div class="section-title">Répartition détaillée par cote de lettre</div>
+
+    <div id="chart"></div>
+  </div>
+
+  <!-- INSIGHT -->
+  <div class="insight-card">
+    <div class="insight-icon">📊</div>
+    <div>
+      <div class="insight-title">Analyse sommaire</div>
+      <div class="insight-body">
+        <strong>72,2 %</strong> de la cohorte a obtenu une cote d'excellence (A+, A ou A−), avec une concentration remarquable sur la cote <strong>A+ (39,7 %)</strong>. La médiane supérieure à la moyenne témoigne d'une distribution <strong>asymétrique à gauche</strong>, ce qui indique que la majorité des étudiant·es performe au-dessus du seuil moyen. Le taux de réussite global de <strong>98,2 %</strong> valide la solide assimilation du matériel pédagogique pour cette session.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Données confidentielles à usage académique interne · Session Hiver 2026
+  </div>
+
+</div>
+
+<script>
+  const data = [
+    { grade: 'A+',  range: '90–100', count: 87, pct: 39.7, color: '#4ade80',  group: 'excellence' },
+    { grade: 'A',   range: '85–89',  count: 38, pct: 17.4, color: '#34d399',  group: 'excellence' },
+    { grade: 'A−',  range: '80–84',  count: 33, pct: 15.1, color: '#6ee7b7',  group: 'excellence' },
+    { grade: 'B+',  range: '75–79',  count: 29, pct: 13.2, color: '#60a5fa',  group: 'merit' },
+    { grade: 'B',   range: '70–74',  count: 11, pct: 5.0,  color: '#93c5fd',  group: 'merit' },
+    { grade: 'C+',  range: '65–69',  count: 10, pct: 4.6,  color: '#fbbf24',  group: 'pass' },
+    { grade: 'C',   range: '60–64',  count:  3, pct: 1.4,  color: '#fcd34d',  group: 'pass' },
+    { grade: 'D+',  range: '55–59',  count:  1, pct: 0.5,  color: '#fb923c',  group: 'low' },
+    { grade: 'D',   range: '50–54',  count:  3, pct: 1.4,  color: '#f97316',  group: 'low' },
+    { grade: 'E',   range: '40–49',  count:  1, pct: 0.5,  color: '#f87171',  group: 'fail' },
+    { grade: 'F',   range: '0–39',   count:  3, pct: 1.4,  color: '#ef4444',  group: 'fail' },
+  ];
+
+  const groupLabels = {
+    excellence: 'Zone d\'excellence',
+    merit:      'Zone de mérite',
+    pass:       'Zone de passage',
+    low:        'Zone faible',
+    fail:       'Échec',
+  };
+
+  const chart = document.getElementById('chart');
+  let lastGroup = null;
+
+  data.forEach((item, i) => {
+    if (item.group !== lastGroup) {
+      if (lastGroup !== null) {
+        const div = document.createElement('div');
+        div.style.cssText = 'height:1px;background:rgba(255,255,255,0.06);margin:0.5rem 0 1rem;';
+        chart.appendChild(div);
+      }
+      lastGroup = item.group;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.style.animationDelay = `${i * 0.07}s`;
+
+    const maxPct = 39.7;
+    const widthPct = (item.pct / maxPct * 100).toFixed(1);
+
+    row.innerHTML = `
+      <div class="grade-label">
+        <span class="grade-letter">${item.grade}</span>
+        <span class="grade-range">${item.range}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="background: linear-gradient(90deg, ${item.color}dd, ${item.color}99); --target-width: ${widthPct}%">
+          <span class="bar-inner-label">${item.count} étu.</span>
+        </div>
+      </div>
+      <div class="bar-meta">
+        <span class="bar-pct">${item.pct.toFixed(1)} %</span>
+        <span class="bar-count">${item.count} étudiant·es</span>
+      </div>
+    `;
+    chart.appendChild(row);
+  });
+
+  // Trigger bar animations after a short delay
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach(el => el.classList.add('animate'));
+    }, 300);
+  });
+</script>
+</body>
+</html>
